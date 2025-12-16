@@ -1,7 +1,11 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { Mail, Zap, Clock, ArrowRight, TrendingUp, Users } from 'lucide-react';
+import { Mail, Zap, Clock, ArrowRight, TrendingUp, Users, AlertCircle } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
 import Header from '../components/Header';
+
+const kpis = useMemo(() => {
+  ...
+}, [events]);
 
 const stats = [
   { label: 'Total Emails', value: kpis.total, icon: Mail, color: 'bg-blue-500', trend: '+2 this hour' },
@@ -80,6 +84,8 @@ const kpis = useMemo(() => {
   };
 }, [events]);
 
+  if (!kpis) return null;
+  
   return (
     <div className="flex-1 flex flex-col bg-slate-50 min-h-screen">
       <Header title="Overview" />
