@@ -4,10 +4,10 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, AreaChart, Area, XAx
 import Header from '../components/Header';
 
 const stats = [
-  { label: 'Total Emails', value: {kpis.total}, icon: Mail, color: 'bg-blue-500', trend: '+2 this hour' },
-  { label: 'Auto-handled', value: '{kpis.autoHandledPct}%', icon: Zap, color: 'bg-emerald-500', trend: '+5% vs last week' },
-  { label: 'Avg Response', value: '{kpis.avgResponseTime === null ? '—' : `${kpis.avgResponseTime}s`}', icon: Clock, color: 'bg-purple-500', trend: '-10s improvement' },
-  { label: 'Routed to Other', value: {kpis.routedToOther}, icon: ArrowRight, color: 'bg-amber-500', trend: 'Needs attention' },
+  { label: 'Total Emails', value: kpis.total, icon: Mail, color: 'bg-blue-500', trend: '+2 this hour' },
+  { label: 'Auto-handled', value: `${kpis.autoHandledPct}%`, icon: Zap, color: 'bg-emerald-500', trend: '+5% vs last week' },
+  { label: 'Avg Response', value: kpis.avgResponseTime === null ? '—' : `${kpis.avgResponseTime}s`, icon: Clock, color: 'bg-purple-500', trend: '-10s improvement' },
+  { label: 'Routed to Other', value: kpis.routedToOther, icon: AlertCircle, color: 'bg-gray-500', trend: '—' },
 ];
 
 const intentData = [
