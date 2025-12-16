@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>n8n → Frontend (polling)</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; padding: 1rem; max-width: 800px; margin: auto; }
+    pre { background:#f6f8fa; padding:1rem; border-radius:6px; white-space:pre-wrap; }
+    .field { margin-bottom: .5rem; }
+  </style>
+</head>
+<body>
+  <h1>Latest n8n Data</h1>
+  <div id="status">Loading…</div>
+
+  <div id="content">
+    <div class="field"><strong>From:</strong> <span id="from">—</span></div>
+    <div class="field"><strong>Subject:</strong> <span id="subject">—</span></div>
+    <div class="field"><strong>Snippet:</strong> <span id="snippet">—</span></div>
+    <div class="field"><strong>Custom:</strong> <pre id="custom">—</pre></div>
+    <div class="field"><strong>Last updated:</strong> <span id="updated">—</span></div>
+  </div>
+
+  <script>
+    const POLL_INTERVAL_MS = 3000;
+    const stateUrl = '/api/state';
+
+    async function fetchState() {
+      try {
+        const r = await fetch(stateUrl, { cache: 'no-cache' });
+        if (r.status === 404) {
+          document.getElementById('status').textContent = 'No data yet.';
+          return;
+        }
+        if (!r.ok) throw new Error('Fetch error ' + r.status);
+        const json = await r.json();
+        document.getElementById('status').textContent = 'Connected';
+        document.getElementById('from').textContent = json.sender_email || json.from || '—';
+        document.getElementById('subject').textContent = json.subject || '—';
+        document.getElementById('snippet').textContent = json.snippet || '—';
+        const custom = Object.assign({}, json);
+        delete custom.sender_email; delete custom.from; delete custom.subject; delete custom.snippet; delete custom.updated_at; delete custom.created_at;
+        document.getElementById('custom').textContent = JSON.stringify(custom, null, 2);
+        document.getElementById('updated').textContent = json.updated_at || json.created_at || new Date().toISOString();
+      } catch (err) {
+        console.error(err);
+        document.getElementById('status').textContent = 'Error fetching state';
+      }
+    }
+
+    fetchState();
+    setInterval(fetchState, POLL_INTERVAL_MS);
+  </script>
+</body>
+</html>
