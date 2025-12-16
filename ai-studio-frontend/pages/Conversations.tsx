@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Search, Filter, SlidersHorizontal, ChevronDown, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
@@ -83,16 +83,77 @@ const MOCK_DATA: Conversation[] = [
 ];
 
 const Conversations: React.FC = () => {
+  const [data, setData] = useState<Conversation[]>(MOCK_DATA);
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterIntent, setFilterIntent] = useState<Intent | 'All'>('All');
+const mapEventsToConversations = (events: any[]): Conversation[] => {
+  return events.map((e) => {
+    const emailMatch = e.sender_email?.match(/<([^>]+)>/);
+    const senderEmail = emailMatch ? emailMatch[1] : e.sender_email;
+    const senderName =
+  e.sender_name ||
+  (e.sender_email?.includes('<')
+    ? e.sender_email.split('<')[0].trim()
+    : 'Unknown');
 
-  const filteredData = MOCK_DATA.filter(item => {
+    return {
+      id: e.thread_id ?? e.id,
+      senderName,
+      senderEmail,
+      intent: e.intent ?? 'Other',
+      confidenceScore:
+        typeof e.confidence === 'number'
+          ? Math.round(e.confidence * 100)
+          : e.confidence_score ?? 0,
+      action:
+        e.action_taken ??
+        (e.intent === 'Other' ? 'Routed to Other' : 'Auto-replied'),
+      label: e.label_applied ?? '—',
+      responseTime: e.response_time_seconds
+        ? `${e.response_time_seconds}s`
+        : '—',
+      date: 'Just now',
+      subject: e.subject ?? '',
+      preview: e.original_body ?? '',
+      fullBody: e.original_body ?? '',
+      aiAnalysis: {
+        decisionPath: Array.isArray(e.decision_path) ? e.decision_path : [],
+        detectedEntities: e.extracted_entities ?? []
+      }
+    };
+  });
+};
+const fetchState = useCallback(async () => {
+  try {
+    const res = await fetch('/api/state', { cache: 'no-store' });
+    if (!res.ok) return;
+
+    const result = await res.json();
+    const events = Array.isArray(result)
+      ? result
+      : result.events ?? result.data ?? [];
+
+    if (events.length > 0) {
+      setData(mapEventsToConversations(events));
+    }
+  } catch (err) {
+    console.error('Failed to fetch /api/state', err);
+  }
+}, []);
+
+useEffect(() => {
+  fetchState();
+  const t = setInterval(fetchState, 3000);
+  return () => clearInterval(t);
+}, [fetchState]);
+  
+  const filteredData = data.filter(item => {
     const matchesSearch = item.senderName.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           item.senderEmail.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesIntent = filterIntent === 'All' || item.intent === filterIntent;
     return matchesSearch && matchesIntent;
-  });
+ });
 
   return (
     <div className="flex-1 flex flex-col bg-slate-50 min-h-screen">
@@ -205,7 +266,7 @@ const Conversations: React.FC = () => {
                 </div>
             )}
              <div className="bg-gray-50 px-6 py-3 border-t border-gray-100 flex items-center justify-between">
-                <span className="text-xs text-gray-500">Showing {filteredData.length} of {MOCK_DATA.length} results</span>
+                <span className="text-xs text-gray-500">Showing {filteredData.length} of {data.length} results</span>
                 <div className="flex space-x-2">
                     <button className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50">Previous</button>
                     <button className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50">Next</button>
