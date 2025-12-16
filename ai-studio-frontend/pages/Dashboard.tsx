@@ -1,13 +1,13 @@
-import React from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Mail, Zap, Clock, ArrowRight, TrendingUp, Users } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
 import Header from '../components/Header';
 
 const stats = [
-  { label: 'Total Emails', value: 12, icon: Mail, color: 'bg-blue-500', trend: '+2 this hour' },
-  { label: 'Auto-handled', value: '67%', icon: Zap, color: 'bg-emerald-500', trend: '+5% vs last week' },
-  { label: 'Avg Response', value: '52s', icon: Clock, color: 'bg-purple-500', trend: '-10s improvement' },
-  { label: 'Routed to Other', value: 2, icon: ArrowRight, color: 'bg-amber-500', trend: 'Needs attention' },
+  { label: 'Total Emails', value: {kpis.total}, icon: Mail, color: 'bg-blue-500', trend: '+2 this hour' },
+  { label: 'Auto-handled', value: '{kpis.autoHandledPct}%', icon: Zap, color: 'bg-emerald-500', trend: '+5% vs last week' },
+  { label: 'Avg Response', value: '{kpis.avgResponseTime === null ? '—' : `${kpis.avgResponseTime}s`}', icon: Clock, color: 'bg-purple-500', trend: '-10s improvement' },
+  { label: 'Routed to Other', value: {kpis.routedToOther}, icon: ArrowRight, color: 'bg-amber-500', trend: 'Needs attention' },
 ];
 
 const intentData = [
@@ -28,6 +28,58 @@ const confidenceData = [
 ];
 
 const Dashboard: React.FC = () => {
+  const [events, setEvents] = useState<any[]>([]);
+
+const fetchState = useCallback(async () => {
+  try {
+    const res = await fetch('/api/state', { cache: 'no-store' });
+    if (!res.ok) return;
+
+    const result = await res.json();
+    const evts = Array.isArray(result)
+      ? result
+      : (result?.events ?? result?.data ?? [result]);
+
+    setEvents(evts);
+  } catch (err) {
+    console.error('Failed to fetch /api/state', err);
+  }
+}, []);
+
+useEffect(() => {
+  fetchState();
+  const t = setInterval(fetchState, 3000);
+  return () => clearInterval(t);
+}, [fetchState]);
+const kpis = useMemo(() => {
+  const total = events.length;
+
+  const autoHandledCount = events.filter(e =>
+    String(e.action_taken || '').toLowerCase() === 'auto_replied'
+  ).length;
+
+  const autoHandledPct = total ? Math.round((autoHandledCount / total) * 100) : 0;
+
+  const routedToOther = events.filter(e =>
+    String(e.intent || '').toLowerCase() === 'other'
+  ).length;
+
+  const times = events
+    .map(e => e.response_time_seconds)
+    .filter((v: any) => typeof v === 'number' && !Number.isNaN(v));
+
+  const avgResponseTime = times.length
+    ? Math.round(times.reduce((a: number, b: number) => a + b, 0) / times.length)
+    : null;
+
+  return {
+    total,
+    autoHandledPct,
+    avgResponseTime, // number|null (seconds)
+    routedToOther,
+  };
+}, [events]);
+
   return (
     <div className="flex-1 flex flex-col bg-slate-50 min-h-screen">
       <Header title="Overview" />
