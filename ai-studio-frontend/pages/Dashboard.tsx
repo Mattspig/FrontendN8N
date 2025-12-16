@@ -3,9 +3,7 @@ import { Mail, Zap, Clock, ArrowRight, TrendingUp, Users, AlertCircle } from 'lu
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
 import Header from '../components/Header';
 
-const kpis = useMemo(() => {
-  ...
-}, [events]);
+const kpis = useMemo(() => {...}, [events]);
 
 const stats = [
   { label: 'Total Emails', value: kpis.total, icon: Mail, color: 'bg-blue-500', trend: '+2 this hour' },
