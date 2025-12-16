@@ -101,7 +101,9 @@ const mapEventsToConversations = (events: any[]): Conversation[] => {
       id: e.thread_id ?? e.id,
       senderName,
       senderEmail,
-      intent: e.intent ?? 'Other',
+      intent: (['buyer','seller','renter'].includes((e.intent || '').toLowerCase())
+  ? (e.intent.toLowerCase().charAt(0).toUpperCase() + e.intent.toLowerCase().slice(1))
+  : 'Other'),
       confidenceScore:
         typeof e.confidence === 'number'
           ? Math.round(e.confidence * 100)
@@ -134,8 +136,8 @@ const fetchState = useCallback(async () => {
       ? result
       : result.events ?? result.data ?? [];
 
-    if (events.length > 0) {
-      setData(mapEventsToConversations(events));
+   setData(mapEventsToConversations(events));
+
     }
   } catch (err) {
     console.error('Failed to fetch /api/state', err);
