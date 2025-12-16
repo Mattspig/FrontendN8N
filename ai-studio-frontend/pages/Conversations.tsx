@@ -134,11 +134,9 @@ const fetchState = useCallback(async () => {
     const result = await res.json();
     const events = Array.isArray(result)
       ? result
-      : result.events ?? result.data ?? [];
+      : (result?.events ?? result?.data ?? [result]);
 
-   setData(mapEventsToConversations(events));
-
-    }
+    setData(mapEventsToConversations(events));
   } catch (err) {
     console.error('Failed to fetch /api/state', err);
   }
