@@ -3,7 +3,34 @@ import { Mail, Zap, Clock, ArrowRight, TrendingUp, Users, AlertCircle } from 'lu
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
 import Header from '../components/Header';
 
-const kpis = useMemo(() => {...}, [events]);
+const kpis = useMemo(() => {
+  const total = events.length;
+
+  const autoHandledCount = events.filter(e =>
+    String(e.action_taken || '').toLowerCase() === 'auto_replied'
+  ).length;
+
+  const autoHandledPct = total ? Math.round((autoHandledCount / total) * 100) : 0;
+
+  const routedToOther = events.filter(e =>
+    String(e.intent || '').toLowerCase() === 'other'
+  ).length;
+
+  const times = events
+    .map(e => e.response_time_seconds)
+    .filter((v: any) => typeof v === 'number' && !Number.isNaN(v));
+
+  const avgResponseTime = times.length
+    ? Math.round(times.reduce((a: number, b: number) => a + b, 0) / times.length)
+    : null;
+
+  return {
+    total,
+    autoHandledPct,
+    avgResponseTime, // number|null (seconds)
+    routedToOther,
+  };
+}, [events]);
 
 const stats = [
   { label: 'Total Emails', value: kpis.total, icon: Mail, color: 'bg-blue-500', trend: '+2 this hour' },
@@ -53,34 +80,6 @@ useEffect(() => {
   const t = setInterval(fetchState, 3000);
   return () => clearInterval(t);
 }, [fetchState]);
-const kpis = useMemo(() => {
-  const total = events.length;
-
-  const autoHandledCount = events.filter(e =>
-    String(e.action_taken || '').toLowerCase() === 'auto_replied'
-  ).length;
-
-  const autoHandledPct = total ? Math.round((autoHandledCount / total) * 100) : 0;
-
-  const routedToOther = events.filter(e =>
-    String(e.intent || '').toLowerCase() === 'other'
-  ).length;
-
-  const times = events
-    .map(e => e.response_time_seconds)
-    .filter((v: any) => typeof v === 'number' && !Number.isNaN(v));
-
-  const avgResponseTime = times.length
-    ? Math.round(times.reduce((a: number, b: number) => a + b, 0) / times.length)
-    : null;
-
-  return {
-    total,
-    autoHandledPct,
-    avgResponseTime, // number|null (seconds)
-    routedToOther,
-  };
-}, [events]);
 
   if (!kpis) return null;
   
