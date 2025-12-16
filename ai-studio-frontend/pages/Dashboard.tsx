@@ -4,13 +4,6 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, AreaChart, Area, XAx
 import Header from '../components/Header';
 
 
-const intentData = [
-  { name: 'Buyer', value: 45, color: '#3b82f6' },
-  { name: 'Seller', value: 25, color: '#a855f7' },
-  { name: 'Renter', value: 20, color: '#f97316' },
-  { name: 'Other', value: 10, color: '#94a3b8' },
-];
-
 const confidenceData = [
   { time: '09:00', score: 85 },
   { time: '10:00', score: 88 },
@@ -74,6 +67,33 @@ useEffect(() => {
     routedToOther,
   };
 }, [events]);
+
+  const intentData = useMemo(() => {
+  const counts = {
+    Buyer: 0,
+    Seller: 0,
+    Renter: 0,
+    Other: 0,
+  };
+
+  events.forEach((e) => {
+    const intentRaw = String(e.intent || '').toLowerCase();
+    if (intentRaw === 'buyer') counts.Buyer++;
+    else if (intentRaw === 'seller') counts.Seller++;
+    else if (intentRaw === 'renter') counts.Renter++;
+    else counts.Other++;
+  });
+
+  const total = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
+
+  return [
+    { name: 'Buyer', value: Math.round((counts.Buyer / total) * 100), color: '#3b82f6' },
+    { name: 'Seller', value: Math.round((counts.Seller / total) * 100), color: '#a855f7' },
+    { name: 'Renter', value: Math.round((counts.Renter / total) * 100), color: '#f97316' },
+    { name: 'Other', value: Math.round((counts.Other / total) * 100), color: '#94a3b8' },
+  ];
+}, [events]);
+
 
 const stats = [
   { label: 'Total Emails', value: kpis.total, icon: Mail, color: 'bg-blue-500', trend: '+2 this hour' },
