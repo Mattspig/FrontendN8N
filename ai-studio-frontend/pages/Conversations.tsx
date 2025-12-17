@@ -82,14 +82,8 @@ const MOCK_DATA: Conversation[] = [
   }
 ];
 
- const confidenceColor = (score: number) => {
-  if (score <= 34) return 'text-red-600';
-  if (score <= 69) return 'text-orange-500';
-  return 'text-emerald-600';
-};
-
 const Conversations: React.FC = () => {
-  const [data, setData] = useState<Conversation[]>(MOCK_DATA);
+  const [data, setData] = useState<Conversation[]>([]);
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterIntent, setFilterIntent] = useState<Intent | 'All'>('All');
@@ -118,7 +112,7 @@ const mapEventsToConversations = (events: any[]): Conversation[] => {
 
       action:
         e.action_taken ??
-        (e.intent === 'Other' ? 'Routed to Other' : 'Auto-replied'),
+        (String(e.intent || '').toLowerCase() === 'other' ? 'Routed to Other' : 'Auto-replied')
       label: e.label_applied ?? '—',
       responseTime: e.response_time_seconds
         ? `${e.response_time_seconds}s`
@@ -134,22 +128,6 @@ const mapEventsToConversations = (events: any[]): Conversation[] => {
     };
   });
 };
-const fetchState = useCallback(async () => {
-  try {
-    const res = await fetch('/api/state', { cache: 'no-store' });
-    if (!res.ok) return;
-
-    const result = await res.json();
-    const events = Array.isArray(result)
-      ? result
-      : (result?.events ?? result?.data ?? [result]);
-
-    const deduped = groupByThread(events);
-setData(mapEventsToConversations(deduped));
-  } catch (err) {
-    console.error('Failed to fetch /api/state', err);
-  }
-}, []);
 
   const groupByThread = (events: any[]) => {
   const map = new Map<string, any>();
@@ -167,6 +145,25 @@ setData(mapEventsToConversations(deduped));
       if (currTime >= prevTime) map.set(id, e);
     }
   });
+    
+const fetchState = useCallback(async () => {
+  try {
+    const res = await fetch('/api/state', { cache: 'no-store' });
+    if (!res.ok) return;
+
+    const result = await res.json();
+    const events = Array.isArray(result)
+      ? result
+      : (result?.events ?? result?.data ?? [result]);
+
+    const deduped = groupByThread(events);
+setData(mapEventsToConversations(deduped));
+  } catch (err) {
+    console.error('Failed to fetch /api/state', err);
+  }
+}, []);
+
+
 
   return Array.from(map.values());
 };
