@@ -36,6 +36,7 @@ export default async function handler(req, res) {
     }
 
     const json = await r.json();
+    console.log('Base44 raw response:', json);
 
     // Adapt to Base44 response shape: pick the most recent item.
     let item = null;
