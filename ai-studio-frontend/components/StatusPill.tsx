@@ -36,10 +36,10 @@ const StatusPill: React.FC<StatusPillProps> = ({ type, value, score }) => {
   } else if (type === 'confidence') {
     // Expect score 0-1 or 0-100. Let's assume passed in as 0-100
     const num = score ?? 0;
-    if (num >= 85) {
+    if (num >= 70) {
       bgClass = 'bg-emerald-50';
       textClass = 'text-emerald-700';
-    } else if (num >= 50) {
+    } else if (num >= 35) {
       bgClass = 'bg-yellow-50';
       textClass = 'text-yellow-700';
     } else {
