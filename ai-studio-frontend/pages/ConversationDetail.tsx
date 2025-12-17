@@ -211,9 +211,7 @@ const latest = useMemo(() => events[events.length - 1] || null, [events]);
                         </button>
                     </div>
                 </div>
-
             </div>
-        </div>
       </main>
     </div>
   );
