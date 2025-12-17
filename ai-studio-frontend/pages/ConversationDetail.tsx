@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, Edit3, AlertTriangle, Send, User, ChevronRight, MessageCircle } from 'lucide-react';
 import Header from '../components/Header';
@@ -9,44 +9,37 @@ const ConversationDetail: React.FC = () => {
   const navigate = useNavigate();
   
   // Mock detail data based on ID (static for now)
-  const detail = {
-    senderName: 'Lulu',
-    senderEmail: 'lulu@example.com',
-    subject: 'Interested in the downtown property',
-    date: 'Oct 24, 2023, 10:23 AM',
-    content: `Hi there,
-    
-I saw the listing for the apartment on Main St and I'm very interested. 
-Is it still available for a viewing this weekend? 
+  const [events, setEvents] = useState<any[]>([]);
+const [loading, setLoading] = useState(true);
 
-Also, does the building allow pets? I have a small dog.
+useEffect(() => {
+  let alive = true;
 
-Thanks,
-Lulu`,
-    aiState: {
-        intent: 'Buyer',
-        confidence: 92,
-        entities: ['Apartment', 'Main St', 'Viewing', 'Pets'],
-        reasoning: [
-            'Detected keywords "interested", "viewing", "listing".',
-            'Sentiment analysis: Positive.',
-            'Entity extraction matched "Main St" property.',
-            'Pet policy query identified.'
-        ],
-        draftReply: `Hi Lulu,
-
-Thanks for your interest in the Main St apartment!
-
-Yes, the unit is still available. We have viewing slots open this Saturday between 10 AM - 2 PM. Would that work for you?
-
-Regarding pets: Yes, the building is pet-friendly for small dogs with a deposit.
-
-Let me know if you'd like to book a specific time.
-
-Best,
-Iris Property Management`
+  const load = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/thread?thread_id=${encodeURIComponent(id || '')}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error(await res.text());
+      const json = await res.json();
+      if (!alive) return;
+      setEvents(json.events || []);
+    } catch (e) {
+      console.error(e);
+      if (!alive) return;
+      setEvents([]);
+    } finally {
+      if (alive) setLoading(false);
     }
   };
+
+  if (id) load();
+  return () => {
+    alive = false;
+  };
+}, [id]);
+
+const latest = useMemo(() => events[events.length - 1] || null, [events]);
+
 
   return (
     <div className="flex-1 flex flex-col bg-slate-50 min-h-screen">
@@ -72,17 +65,42 @@ Iris Property Management`
                                 L
                             </div>
                             <div>
-                                <h3 className="font-bold text-gray-900">{detail.senderName}</h3>
-                                <p className="text-sm text-gray-500">{detail.senderEmail}</p>
+                                <h3 className="font-bold text-gray-900">{latest?.sender_name ?? '—'}</h3>
+                                <p className="text-sm text-gray-500">{(latest?.sender_email ?? '—').trim()}</p>
                             </div>
                         </div>
-                        <span className="text-xs text-gray-400 font-medium">{detail.date}</span>
+                        <span className="text-xs text-gray-400 font-medium">
+  {latest?.updated_at || latest?.created_date || '—'}
+</span>
                     </div>
-                    <h2 className="mt-6 text-lg font-semibold text-gray-800">{detail.subject}</h2>
+                    <h2 className="mt-6 text-lg font-semibold text-gray-800">{latest?.subject ?? '—'}</h2>
                 </div>
                 
                 <div className="p-8 flex-1 overflow-y-auto whitespace-pre-wrap text-gray-700 leading-relaxed font-normal">
-                    {detail.content}
+                    {loading ? (
+  <div className="text-sm text-gray-400">Loading thread…</div>
+) : events.length === 0 ? (
+  <div className="text-sm text-gray-400">No messages found for this thread.</div>
+) : (
+  <div className="space-y-6">
+    {events.map((e, idx) => (
+      <div key={e.id || idx} className="border border-gray-100 rounded-lg p-4 bg-white">
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-xs font-semibold text-gray-500">
+            {String(e.event_type || 'event').toUpperCase()}
+          </div>
+          <div className="text-xs text-gray-400">
+            {e.updated_at || e.created_date || ''}
+          </div>
+        </div>
+        <div className="text-sm text-gray-700 whitespace-pre-wrap">
+          {e.original_body || e.reply_text || '—'}
+        </div>
+      </div>
+    ))}
+  </div>
+)}
+
                 </div>
             </div>
 
@@ -98,13 +116,13 @@ Iris Property Management`
                              </div>
                              <span className="font-semibold text-gray-800">AI Analysis</span>
                         </div>
-                        <StatusPill type="confidence" value="High" score={detail.aiState.confidence} />
+                        <StatusPill type="confidence" value="High" score={latest?.confidence ?? 0} />
                     </div>
 
                     <div className="space-y-4">
                         <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
                             <span className="text-sm text-gray-500 font-medium">Detected Intent</span>
-                            <StatusPill type="intent" value={detail.aiState.intent} />
+                            <StatusPill type="intent" value={latest?.intent} />
                         </div>
                         
                         <div>
@@ -140,7 +158,7 @@ Iris Property Management`
                     </div>
 
                     <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4 text-sm text-gray-700 whitespace-pre-wrap font-mono">
-                        {detail.aiState.draftReply}
+                        {latest?.reply_text}
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
