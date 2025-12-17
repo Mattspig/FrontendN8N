@@ -104,8 +104,10 @@ const stats = [
 
   const avgConfidence = useMemo(() => {
   const vals = events
-    .map(e => typeof e.confidence === 'number' ? e.confidence * 100 : null)
-    .filter((v): v is number => v !== null);
+    .map(e => {
+  if (typeof e.confidence !== 'number') return null;
+  return Math.max(0, Math.min(100, e.confidence));
+})
 
   if (vals.length === 0) return null;
 
