@@ -39,31 +39,33 @@ export default async function handler(req, res) {
     console.log('Base44 raw response:', json);
 
     // Adapt to Base44 response shape: pick the most recent item.
-    let item = null;
-    if (Array.isArray(json)) {
-      // assume API returns array of items
-      item = json[0] || null;
-    } else if (json.items && Array.isArray(json.items)) {
-      item = json.items[0] || null;
-    } else if (json.data && Array.isArray(json.data)) {
-      item = json.data[0] || null;
-    } else if (json[0]) {
-      item = json[0];
-    } else if (typeof json === 'object') {
-      // if the API returns a single object, use it
-      item = json;
-    }
+   // Normalize Base44 response to an array
+let events = [];
 
-    if (!item) {
-      res.status(404).json({ error: 'No data' });
-      return;
-    }
+if (Array.isArray(json)) {
+  events = json;
+} else if (json.items && Array.isArray(json.items)) {
+  events = json.items;
+} else if (json.data && Array.isArray(json.data)) {
+  events = json.data;
+} else if (json[0]) {
+  events = json;
+} else if (typeof json === 'object') {
+  events = [json];
+}
 
-    if (!item.updated_at && !item.created_at) {
-      item.updated_at = new Date().toISOString();
-    }
+// Sort newest first (optional but recommended)
+events.sort((a, b) => {
+  const ta = new Date(a.updated_date || a.created_date || 0).getTime();
+  const tb = new Date(b.updated_date || b.created_date || 0).getTime();
+  return tb - ta;
+});
 
-    res.status(200).json({ events: [item] });
+// Limit to last 50 to keep frontend fast
+events = events.slice(0, 50);
+
+// ✅ Return ALL events
+res.status(200).json({ events });
     item.sender_email = (item.sender_email || '').trim();
   } catch (err) {
     console.error(err);
