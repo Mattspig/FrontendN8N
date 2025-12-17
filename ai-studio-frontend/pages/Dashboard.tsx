@@ -1,18 +1,8 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { Mail, Zap, Clock, ArrowRight, TrendingUp, Users, AlertCircle } from 'lucide-react';
+import { Mail, Zap, Clock, Users, AlertCircle } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import Header from '../components/Header';
 
-
-const confidenceData = [
-  { time: '09:00', score: 85 },
-  { time: '10:00', score: 88 },
-  { time: '11:00', score: 82 },
-  { time: '12:00', score: 90 },
-  { time: '13:00', score: 95 },
-  { time: '14:00', score: 89 },
-  { time: '15:00', score: 92 },
-];
 
 const Dashboard: React.FC = () => {
   const [events, setEvents] = useState<any[]>([]);
@@ -102,30 +92,36 @@ const stats = [
   { label: 'Routed to Other', value: kpis.routedToOther, icon: AlertCircle, color: 'bg-gray-500', trend: '—' },
 ];
 
-  const confidenceColor = (score: number) => {
-  if (score <= 34) return 'text-red-600';
-  if (score <= 69) return 'text-orange-500';
-  return 'text-emerald-600';
-};
 
   const avgConfidence = useMemo(() => {
-  // ✅ keep only real confidence numbers (0–100)
-  // If 0 means "missing" in your system, keep the `v > 0` check.
   const vals = events
     .map((e) => e.confidence)
-    .filter((v: any) => typeof v === 'number' && !Number.isNaN(v) && v > 0 && v <= 100);
+    .filter((v: any) => typeof v === 'number' && !Number.isNaN(v) && v >= 0 && v <= 100);
+
+  const coverage = `${vals.length}/${events.length}`;
 
   if (vals.length === 0) {
-    return { avg: null as number | null, coverage: `0/${events.length}` };
+    return { avg: null as number | null, coverage };
   }
 
   const avg = Math.round(vals.reduce((a: number, b: number) => a + b, 0) / vals.length);
-  return { avg, coverage: `${vals.length}/${events.length}` };
+  return { avg, coverage };
+}, [events]);
+
+  const highAutoHandled = useMemo(() => {
+  const scoredAuto = events.filter(
+    (e) =>
+      String(e.action_taken || '').toLowerCase() === 'auto_replied' &&
+      typeof e.confidence === 'number'
+  );
+
+  if (scoredAuto.length === 0) return null;
+
+  const high = scoredAuto.filter((e) => e.confidence >= 70).length;
+  return Math.round((high / scoredAuto.length) * 100);
 }, [events]);
 
 
-
-  if (!kpis) return null;
   
   return (
     <div className="flex-1 flex flex-col bg-slate-50 min-h-screen">
@@ -230,8 +226,17 @@ const stats = [
         </div>
 
         <div className="text-xs text-gray-400">
-          Confidence available for {avgConfidence.coverage} emails
-        </div>
+  Confidence coverage: {avgConfidence.coverage} emails
+</div>
+        {highAutoHandled !== null && (
+  <div className="text-xs text-gray-400">
+    Auto-handled at ≥70% confidence: {highAutoHandled}%
+  </div>
+)}
+
+<div className="text-xs text-gray-400">
+  (Only emails scored by the qualifier workflow)
+</div>
 
         <div>
           <span
