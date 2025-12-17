@@ -2,7 +2,7 @@
 export default async function handler(req, res) {
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
 
-  const threadId = req.query.id;
+  const threadId = req.query.id || req.query.thread_id;
   if (!threadId) return res.status(400).json({ error: "Missing ?id=THREAD_ID" });
 
   const baseUrl = process.env.BASE44_API_URL; // .../entities
