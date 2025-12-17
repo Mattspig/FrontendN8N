@@ -23,6 +23,15 @@ const fetchState = useCallback(async () => {
   }
 }, []);
 
+
+  const fetchState = useCallback(async () => {
+  const res = await fetch("/api/state", { cache: "no-store" });
+  if (!res.ok) return;
+  const result = await res.json();
+  const events = Array.isArray(result) ? result : (result?.events ?? result?.data ?? [result]);
+  setEvents(events);
+}, []);
+
 useEffect(() => {
   fetchState();
   const t = setInterval(fetchState, 3000);
