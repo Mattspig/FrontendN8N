@@ -225,4 +225,30 @@ const ConversationDetail: React.FC = () => {
                 </span>
               </div>
 
-              <div className="flex-1 bg-gray-50 border border-gray-200 rounded
+              <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4 text-sm text-gray-700 whitespace-pre-wrap font-mono">
+                {latest?.reply_text ?? 'No reply generated yet.'}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <button className="col-span-2 flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow">
+                  <Check size={18} />
+                  <span>Looks good, send it</span>
+                </button>
+                <button className="flex items-center justify-center space-x-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 py-2.5 rounded-lg font-medium transition-colors">
+                  <Edit3 size={18} />
+                  <span>Edit reply</span>
+                </button>
+                <button className="flex items-center justify-center space-x-2 bg-white border border-gray-200 hover:bg-amber-50 text-gray-700 hover:text-amber-700 hover:border-amber-200 py-2.5 rounded-lg font-medium transition-colors">
+                  <AlertTriangle size={18} />
+                  <span>Escalate</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default ConversationDetail;
