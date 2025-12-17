@@ -12,15 +12,16 @@ const ConversationDetail: React.FC = () => {
   const [events, setEvents] = useState<any[]>([]);
 const [loading, setLoading] = useState(true);
 
+
 useEffect(() => {
   let alive = true;
 
   const load = async () => {
     try {
       setLoading(true);
-      fetch(`/api/thread?id=${encodeURIComponent(id || '')}`, { cache: 'no-store' });
-      if (!res.ok) throw new Error(await res.text());
-      const json = await res.json();
+      const res = await fetch(`/api/thread?id=${encodeURIComponent(id || '')}`, { cache: 'no-store' });
+if (!res.ok) throw new Error(await res.text());
+const json = await res.json();
       if (!alive) return;
       setEvents(json.events || []);
     } catch (e) {
@@ -76,29 +77,52 @@ const latest = useMemo(() => events[events.length - 1] || null, [events]);
                     <h2 className="mt-6 text-lg font-semibold text-gray-800">{latest?.subject ?? '—'}</h2>
                 </div>
                 
-                <div className="p-8 flex-1 overflow-y-auto whitespace-pre-wrap text-gray-700 leading-relaxed font-normal">
-                    {loading ? (
-  <div className="text-sm text-gray-400">Loading thread…</div>
-) : events.length === 0 ? (
-  <div className="text-sm text-gray-400">No messages found for this thread.</div>
-) : (
-  <div className="space-y-6">
-    {events.map((e, idx) => (
-      <div key={e.id || idx} className="border border-gray-100 rounded-lg p-4 bg-white">
-        <div className="flex items-center justify-between mb-2">
-          <div className="text-xs font-semibold text-gray-500">
-            {String(e.event_type || 'event').toUpperCase()}
+               <div className="p-6 flex-1 overflow-y-auto text-gray-700 font-normal">
+  {loading ? (
+    <div className="text-sm text-gray-400">Loading thread…</div>
+  ) : events.length === 0 ? (
+    <div className="text-sm text-gray-400">No messages found for this thread.</div>
+  ) : (
+    <div className="space-y-4">
+      {events.map((e, idx) => (
+        <div key={e.id || idx} className="rounded-xl border border-gray-100 overflow-hidden">
+          {/* Header */}
+          <div className="px-4 py-3 bg-gray-50/60 flex items-center justify-between">
+            <div className="text-xs font-semibold text-gray-600">
+              {e.sender_name || 'Sender'} <span className="font-normal text-gray-400">{String(e.sender_email || '').trim()}</span>
+            </div>
+            <div className="text-xs text-gray-400">
+              {e.updated_at || e.created_date || ''}
+            </div>
           </div>
-          <div className="text-xs text-gray-400">
-            {e.updated_at || e.created_date || ''}
+
+          {/* Incoming email */}
+          <div className="p-4 bg-white">
+            <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">
+              Incoming
+            </div>
+            <div className="text-sm whitespace-pre-wrap">
+              {e.original_body ? String(e.original_body) : '—'}
+            </div>
           </div>
+
+          {/* Outgoing reply (if any) */}
+          {e.reply_text ? (
+            <div className="p-4 bg-emerald-50 border-t border-emerald-100">
+              <div className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider mb-2">
+                Iris Reply
+              </div>
+              <div className="text-sm whitespace-pre-wrap text-gray-800">
+                {String(e.reply_text)}
+              </div>
+            </div>
+          ) : null}
         </div>
-        <div className="text-sm text-gray-700 whitespace-pre-wrap">
-          {e.original_body || e.reply_text || '—'}
-        </div>
-      </div>
-    ))}
-  </div>
+      ))}
+    </div>
+  )}
+</div>
+
 )}
 
                 </div>
@@ -127,8 +151,20 @@ const latest = useMemo(() => events[events.length - 1] || null, [events]);
                         
                         <div>
                             <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-2">Decision Logic</span>
-                            <ul className="space-y-2">
-                                {detail.aiState.reasoning.map((step, idx) => (
+                       {Array.isArray(latest?.decision_path) && latest.decision_path.length > 0 ? (
+  <ul className="space-y-2">
+    {latest.decision_path.map((step: any, idx: number) => (
+      <li key={idx} className="flex items-start text-sm text-gray-600">
+        <ChevronRight size={14} className="mt-1 mr-1 text-gray-400 flex-shrink-0" />
+        {String(step)}
+      </li>
+    ))}
+  </ul>
+) : (
+  <div className="text-sm text-gray-400">No decision path available.</div>
+)}
+
+                             
                                     <li key={idx} className="flex items-start text-sm text-gray-600">
                                         <ChevronRight size={14} className="mt-1 mr-1 text-gray-400 flex-shrink-0" />
                                         {step}
@@ -139,8 +175,18 @@ const latest = useMemo(() => events[events.length - 1] || null, [events]);
 
                          <div>
                             <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-2">Entities</span>
-                            <div className="flex flex-wrap gap-2">
-                                {detail.aiState.entities.map((entity, idx) => (
+                           {Array.isArray(latest?.extracted_entities) && latest.extracted_entities.length > 0 ? (
+  <div className="flex flex-wrap gap-2">
+    {latest.extracted_entities.map((entity: any, idx: number) => (
+      <span key={idx} className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded border border-slate-200">
+        {String(entity)}
+      </span>
+    ))}
+  </div>
+) : (
+  <div className="text-sm text-gray-400">No entities extracted.</div>
+)}
+
                                     <span key={idx} className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded border border-slate-200">
                                         {entity}
                                     </span>
