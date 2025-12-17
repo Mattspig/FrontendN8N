@@ -215,37 +215,47 @@ const stats = [
   </p>
 
   <div className="flex items-center justify-center h-40">
-    {avgConfidence.avg === null ? (
-  <span className="text-gray-400 text-sm">No confidence data yet</span>
-) : (
-  <>
-    <div className="text-5xl font-extrabold text-emerald-600">
-      {avgConfidence.avg}%
-    </div>
-
-    <div className="mt-2 text-xs text-gray-400">
-      Confidence available for {avgConfidence.coverage} emails
-    </div>
-
-    <div className="mt-3">
-      <span
-        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+  {avgConfidence.avg === null ? (
+    <span className="text-gray-400 text-sm">No confidence data yet</span>
+  ) : (
+    <div className="text-center space-y-2">
+      <div
+        className={`text-5xl font-extrabold ${
           avgConfidence.avg <= 34
-            ? 'bg-red-100 text-red-700'
+            ? 'text-red-600'
             : avgConfidence.avg <= 69
-            ? 'bg-orange-100 text-orange-700'
-            : 'bg-emerald-100 text-emerald-700'
+            ? 'text-orange-500'
+            : 'text-emerald-600'
         }`}
       >
-        {avgConfidence.avg <= 34
-          ? 'Low confidence'
-          : avgConfidence.avg <= 69
-          ? 'Medium confidence'
-          : 'High confidence'}
-      </span>
+        {avgConfidence.avg}%
+      </div>
+
+      <div className="text-xs text-gray-400">
+        Confidence available for {avgConfidence.coverage} emails
+      </div>
+
+      <div>
+        <span
+          className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+            avgConfidence.avg <= 34
+              ? 'bg-red-100 text-red-700'
+              : avgConfidence.avg <= 69
+              ? 'bg-orange-100 text-orange-700'
+              : 'bg-emerald-100 text-emerald-700'
+          }`}
+        >
+          {avgConfidence.avg <= 34
+            ? 'Low confidence'
+            : avgConfidence.avg <= 69
+            ? 'Medium confidence'
+            : 'High confidence'}
+        </span>
+      </div>
     </div>
-  </>
-)}
+  )}
+</div>
+
 
   </div>
 </div>
