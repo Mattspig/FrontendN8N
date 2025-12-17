@@ -109,16 +109,20 @@ const stats = [
 };
 
   const avgConfidence = useMemo(() => {
+  // ✅ keep only real confidence numbers (0–100)
+  // If 0 means "missing" in your system, keep the `v > 0` check.
   const vals = events
-    .map(e => {
-  if (typeof e.confidence !== 'number') return null;
-  return Math.max(0, Math.min(100, e.confidence));
-})
+    .map((e) => e.confidence)
+    .filter((v: any) => typeof v === 'number' && !Number.isNaN(v) && v > 0 && v <= 100);
 
-  if (vals.length === 0) return null;
+  if (vals.length === 0) {
+    return { avg: null as number | null, coverage: `0/${events.length}` };
+  }
 
-  return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+  const avg = Math.round(vals.reduce((a: number, b: number) => a + b, 0) / vals.length);
+  return { avg, coverage: `${vals.length}/${events.length}` };
 }, [events]);
+
 
 
   if (!kpis) return null;
@@ -211,12 +215,15 @@ const stats = [
   </p>
 
   <div className="flex items-center justify-center h-40">
-    {avgConfidence === null ? (
+    {avgConfidence.avg === null ? (
       <span className="text-gray-400 text-sm">No confidence data yet</span>
     ) : (
       <div className="text-center">
         <div className={`text-5xl font-extrabold ${confidenceColor(avgConfidence)}`}>
-          {avgConfidence}%
+          {avgConfidence.avg}%
+          <div className="mt-2 text-xs text-gray-400">
+  Confidence available for {avgConfidence.coverage} emails
+</div>
         </div>
         <div className="mt-2">
           <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
