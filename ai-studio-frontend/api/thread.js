@@ -8,7 +8,7 @@ export default async function handler(req, res) {
 
   const threadId = req.query.id || req.query.thread_id;
 if (!threadId) {
-  return res.status(400).json({ error: "thread_id is required" });
+  return res.status(400).json({ error: "id is required" });
 }
   const baseUrl = process.env.BASE44_API_URL; // .../entities
   const key = process.env.BASE44_API_KEY;
