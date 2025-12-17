@@ -260,4 +260,3 @@ const stats = [
     </main>
   </div>
 );
-export default Dashboard;
