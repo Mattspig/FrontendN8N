@@ -111,9 +111,11 @@ const mapEventsToConversations = (events: any[]): Conversation[] => {
     : 0,
 
       action:
-        e.action_taken ??
-        (String(e.intent || '').toLowerCase() === 'other' ? 'Routed to Other' : 'Auto-replied')
-      label: e.label_applied ?? '—',
+  e.action_taken ??
+  (String(e.intent || '').toLowerCase() === 'other'
+    ? 'Routed to Other'
+    : 'Auto-replied'),
+label: e.label_applied ?? '—',
       responseTime: e.response_time_seconds
         ? `${e.response_time_seconds}s`
         : '—',
