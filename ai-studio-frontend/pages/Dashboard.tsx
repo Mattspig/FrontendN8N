@@ -216,27 +216,37 @@ const stats = [
 
   <div className="flex items-center justify-center h-40">
     {avgConfidence.avg === null ? (
-      <span className="text-gray-400 text-sm">No confidence data yet</span>
-    ) : (
-      <div className="text-center">
-        <div className={`text-5xl font-extrabold ${confidenceColor(avgConfidence)}`}>
-          {avgConfidence.avg}%
-          <div className="mt-2 text-xs text-gray-400">
-  Confidence available for {avgConfidence.coverage} emails
-</div>
-        </div>
-        <div className="mt-2">
-          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-            ${avgConfidence >= 70
-              ? 'bg-emerald-100 text-emerald-700'
-              : avgConfidence >= 35
-              ? 'bg-yellow-100 text-yellow-700'
-              : 'bg-red-100 text-red-700'}`}>
-            {avgConfidence >= 70 ? 'High confidence' : avgConfidence >= 35 ? 'Medium confidence' : 'Low confidence'}
-          </span>
-        </div>
-      </div>
-    )}
+  <span className="text-gray-400 text-sm">No confidence data yet</span>
+) : (
+  <>
+    <div className="text-5xl font-extrabold text-emerald-600">
+      {avgConfidence.avg}%
+    </div>
+
+    <div className="mt-2 text-xs text-gray-400">
+      Confidence available for {avgConfidence.coverage} emails
+    </div>
+
+    <div className="mt-3">
+      <span
+        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+          avgConfidence.avg <= 34
+            ? 'bg-red-100 text-red-700'
+            : avgConfidence.avg <= 69
+            ? 'bg-orange-100 text-orange-700'
+            : 'bg-emerald-100 text-emerald-700'
+        }`}
+      >
+        {avgConfidence.avg <= 34
+          ? 'Low confidence'
+          : avgConfidence.avg <= 69
+          ? 'Medium confidence'
+          : 'High confidence'}
+      </span>
+    </div>
+  </>
+)}
+
   </div>
 </div>
 
