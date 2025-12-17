@@ -251,21 +251,13 @@ const stats = [
             ? 'Medium confidence'
             : 'High confidence'}
         </span>
-      </div>
-    </div>
-  )}
-</div>
-
-
-  </div>
-</div>
-
-
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-
-      </main>
-    </div>
-  );
-};
-
+      </div>
+    </main>
+  </div>
+);
 export default Dashboard;
