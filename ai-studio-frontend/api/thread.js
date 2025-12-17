@@ -3,8 +3,9 @@ export default async function handler(req, res) {
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
 
   const threadId = req.query.id || req.query.thread_id;
-  if (!threadId) return res.status(400).json({ error: "Missing ?id=THREAD_ID" });
-
+if (!threadId) {
+  return res.status(400).json({ error: "thread_id is required" });
+}
   const baseUrl = process.env.BASE44_API_URL; // .../entities
   const key = process.env.BASE44_API_KEY;
   const keyHeader = process.env.BASE44_API_KEY_HEADER || "api_key";
