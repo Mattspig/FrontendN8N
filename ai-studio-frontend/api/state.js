@@ -1,11 +1,13 @@
-// Vercel serverless function: returns the latest EmailEvent record from Base44 for the frontend to poll
+// ai-studio-frontend/api/state.js
+
+// Returns a list of recent EmailEvent records from Base44
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
 
-  const baseUrl = process.env.BASE44_API_URL; // e.g. https://app.base44.com/api/apps/.../entities
+  const baseUrl = process.env.BASE44_API_URL;
   const key = process.env.BASE44_API_KEY;
   const keyHeader = process.env.BASE44_API_KEY_HEADER || 'api_key';
 
@@ -20,8 +22,9 @@ export default async function handler(req, res) {
     const r = await fetch(url, {
       headers: {
         'Content-Type': 'application/json',
-        ...(key ? { [keyHeader]: key } : {})
-      }
+        ...(key ? { [keyHeader]: key } : {}),
+      },
+      cache: 'no-store',
     });
 
     if (r.status === 404) {
@@ -36,37 +39,36 @@ export default async function handler(req, res) {
     }
 
     const json = await r.json();
-    console.log('Base44 raw response:', json);
 
-    // Adapt to Base44 response shape: pick the most recent item.
-   // Normalize Base44 response to an array
-let events = [];
+    // Normalize Base44 response to an array
+    let events = [];
+    if (Array.isArray(json)) {
+      events = json;
+    } else if (json.items && Array.isArray(json.items)) {
+      events = json.items;
+    } else if (json.data && Array.isArray(json.data)) {
+      events = json.data;
+    } else if (json) {
+      events = [json];
+    }
 
-if (Array.isArray(json)) {
-  events = json;
-} else if (json.items && Array.isArray(json.items)) {
-  events = json.items;
-} else if (json.data && Array.isArray(json.data)) {
-  events = json.data;
-} else if (json[0]) {
-  events = json;
-} else if (typeof json === 'object') {
-  events = [json];
-}
+    // Clean / normalize some fields
+    events = events.map((item) => ({
+      ...item,
+      sender_email: (item.sender_email || '').trim(),
+    }));
 
-// Sort newest first (optional but recommended)
-events.sort((a, b) => {
-  const ta = new Date(a.updated_date || a.created_date || 0).getTime();
-  const tb = new Date(b.updated_date || b.created_date || 0).getTime();
-  return tb - ta;
-});
+    // Sort newest first
+    events.sort((a, b) => {
+      const ta = new Date(a.updated_date || a.created_date || 0).getTime();
+      const tb = new Date(b.updated_date || b.created_date || 0).getTime();
+      return tb - ta;
+    });
 
-// Limit to last 50 to keep frontend fast
-events = events.slice(0, 50);
+    // Limit to last 50
+    events = events.slice(0, 50);
 
-// ✅ Return ALL events
-res.status(200).json({ events });
-    item.sender_email = (item.sender_email || '').trim();
+    res.status(200).json({ events });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
