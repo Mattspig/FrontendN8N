@@ -102,6 +102,12 @@ const stats = [
   { label: 'Routed to Other', value: kpis.routedToOther, icon: AlertCircle, color: 'bg-gray-500', trend: '—' },
 ];
 
+  const confidenceColor = (score: number) => {
+  if (score <= 34) return 'text-red-600';
+  if (score <= 69) return 'text-orange-500';
+  return 'text-emerald-600';
+};
+
   const avgConfidence = useMemo(() => {
   const vals = events
     .map(e => {
@@ -209,17 +215,17 @@ const stats = [
       <span className="text-gray-400 text-sm">No confidence data yet</span>
     ) : (
       <div className="text-center">
-        <div className="text-5xl font-extrabold text-emerald-600">
+        <div className={`text-5xl font-extrabold ${confidenceColor(avgConfidence)}`}>
           {avgConfidence}%
         </div>
         <div className="mt-2">
           <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-            ${avgConfidence >= 80
+            ${avgConfidence >= 70
               ? 'bg-emerald-100 text-emerald-700'
-              : avgConfidence >= 50
+              : avgConfidence >= 35
               ? 'bg-yellow-100 text-yellow-700'
               : 'bg-red-100 text-red-700'}`}>
-            {avgConfidence >= 80 ? 'High confidence' : avgConfidence >= 50 ? 'Medium confidence' : 'Low confidence'}
+            {avgConfidence >= 70 ? 'High confidence' : avgConfidence >= 35 ? 'Medium confidence' : 'Low confidence'}
           </span>
         </div>
       </div>
