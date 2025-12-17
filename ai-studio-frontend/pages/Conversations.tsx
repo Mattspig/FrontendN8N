@@ -82,6 +82,12 @@ const MOCK_DATA: Conversation[] = [
   }
 ];
 
+ const confidenceColor = (score: number) => {
+  if (score <= 34) return 'text-red-600';
+  if (score <= 69) return 'text-orange-500';
+  return 'text-emerald-600';
+};
+
 const Conversations: React.FC = () => {
   const [data, setData] = useState<Conversation[]>(MOCK_DATA);
   const navigate = useNavigate();
@@ -96,6 +102,7 @@ const mapEventsToConversations = (events: any[]): Conversation[] => {
   (e.sender_email?.includes('<')
     ? e.sender_email.split('<')[0].trim()
     : 'Unknown');
+
 
     return {
       id: e.thread_id ?? e.id,
