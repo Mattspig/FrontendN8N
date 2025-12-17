@@ -116,9 +116,21 @@ const mapEventsToConversations = (events: any[]): Conversation[] => {
     ? Math.round(Math.max(0, Math.min(100, e.confidence)))
     : 0,
 
-      action:
-        e.action_taken ??
-        (e.intent === 'Other' ? 'Routed to Other' : 'Auto-replied'),
+     // Normalize action into nice label
+action: (() => {
+  const raw = String(e.action_taken || '').toLowerCase().trim();
+
+  if (raw === 'auto_replied' || raw === 'auto-replied' || raw === 'auto replied') {
+    return 'Auto Replied';
+  }
+  if (raw === 'routed_to_other' || raw === 'routed-to-other' || raw === 'routed to other') {
+    return 'Routed To Other';
+  }
+
+  // fallback if Base44 sends something unexpected
+  return e.intent === 'Other' ? 'Routed To Other' : 'Auto Replied';
+})(),
+
       label: e.label_applied ?? '—',
       responseTime: e.response_time_seconds
         ? `${e.response_time_seconds}s`
