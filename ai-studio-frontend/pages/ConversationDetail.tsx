@@ -18,7 +18,7 @@ useEffect(() => {
   const load = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/thread?thread_id=${encodeURIComponent(id || '')}`, { cache: 'no-store' });
+      const res = await fetch(`/api/thread?id=${encodeURIComponent(id || '')}`, { cache: 'no-store' });
       if (!res.ok) throw new Error(await res.text());
       const json = await res.json();
       if (!alive) return;
