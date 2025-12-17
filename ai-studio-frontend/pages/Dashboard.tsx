@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Mail, Zap, Clock, ArrowRight, TrendingUp, Users, AlertCircle } from 'lucide-react';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import Header from '../components/Header';
 
 
@@ -102,6 +102,17 @@ const stats = [
   { label: 'Routed to Other', value: kpis.routedToOther, icon: AlertCircle, color: 'bg-gray-500', trend: '—' },
 ];
 
+  const avgConfidence = useMemo(() => {
+  const vals = events
+    .map(e => typeof e.confidence === 'number' ? e.confidence * 100 : null)
+    .filter((v): v is number => v !== null);
+
+  if (vals.length === 0) return null;
+
+  return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+}, [events]);
+
+
   if (!kpis) return null;
   
   return (
@@ -184,38 +195,36 @@ const stats = [
 
             {/* Confidence Trend */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                 <div className="flex items-center justify-between mb-6">
-                    <div>
-                        <h3 className="text-lg font-bold text-gray-800">Confidence Trend</h3>
-                        <p className="text-sm text-gray-500">AI confidence score over time (Last 8 hours)</p>
-                    </div>
-                    <button className="text-gray-400 hover:text-gray-600">
-                        <TrendingUp size={18} />
-                    </button>
-                </div>
-                <div className="h-64 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart
-                            data={confidenceData}
-                            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                        >
-                            <defs>
-                                <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
-                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                            <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} dy={10} />
-                            <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} domain={[60, 100]} />
-                            <Tooltip 
-                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                            />
-                            <Area type="monotone" dataKey="score" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorScore)" />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </div>
-            </div>
+  <h3 className="text-lg font-bold text-gray-800 mb-2">
+    Average AI Confidence
+  </h3>
+  <p className="text-sm text-gray-500 mb-6">
+    How confident Iris is when automatically handling incoming emails
+  </p>
+
+  <div className="flex items-center justify-center h-40">
+    {avgConfidence === null ? (
+      <span className="text-gray-400 text-sm">No confidence data yet</span>
+    ) : (
+      <div className="text-center">
+        <div className="text-5xl font-extrabold text-emerald-600">
+          {avgConfidence}%
+        </div>
+        <div className="mt-2">
+          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+            ${avgConfidence >= 80
+              ? 'bg-emerald-100 text-emerald-700'
+              : avgConfidence >= 50
+              ? 'bg-yellow-100 text-yellow-700'
+              : 'bg-red-100 text-red-700'}`}>
+            {avgConfidence >= 80 ? 'High confidence' : avgConfidence >= 50 ? 'Medium confidence' : 'Low confidence'}
+          </span>
+        </div>
+      </div>
+    )}
+  </div>
+</div>
+
 
         </div>
 
