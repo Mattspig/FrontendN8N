@@ -144,11 +144,32 @@ const fetchState = useCallback(async () => {
       ? result
       : (result?.events ?? result?.data ?? [result]);
 
-    setData(mapEventsToConversations(events));
+    const deduped = groupByThread(events);
+setData(mapEventsToConversations(deduped));
   } catch (err) {
     console.error('Failed to fetch /api/state', err);
   }
 }, []);
+
+  const groupByThread = (events: any[]) => {
+  const map = new Map<string, any>();
+
+  events.forEach((e) => {
+    const id = e.thread_id ?? e.id;
+    if (!id) return;
+
+    const prev = map.get(id);
+    if (!prev) {
+      map.set(id, e);
+    } else {
+      const prevTime = new Date(prev.updated_at || prev.created_date || 0).getTime();
+      const currTime = new Date(e.updated_at || e.created_date || 0).getTime();
+      if (currTime >= prevTime) map.set(id, e);
+    }
+  });
+
+  return Array.from(map.values());
+};
 
 useEffect(() => {
   fetchState();
