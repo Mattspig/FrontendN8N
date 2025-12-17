@@ -105,9 +105,10 @@ const mapEventsToConversations = (events: any[]): Conversation[] => {
   ? (e.intent.toLowerCase().charAt(0).toUpperCase() + e.intent.toLowerCase().slice(1))
   : 'Other'),
       confidenceScore:
-        typeof e.confidence === 'number'
-          ? Math.round(e.confidence * 100)
-          : e.confidence_score ?? 0,
+  typeof e.confidence === 'number'
+    ? Math.round(Math.max(0, Math.min(100, e.confidence)))
+    : 0,
+
       action:
         e.action_taken ??
         (e.intent === 'Other' ? 'Routed to Other' : 'Auto-replied'),
